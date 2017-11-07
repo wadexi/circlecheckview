@@ -2,6 +2,8 @@ package kyvo.circlecheckview;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.*;
+import android.widget.*;
 
 import java.util.*;
 
@@ -16,6 +18,12 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().hide();
 
         final CircleCheckView circleCheckView = (CircleCheckView) findViewById(R.id.circleCheckView);
+        circleCheckView.setOnViewClikListener(new CircleCheckView.OnViewClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "优化", Toast.LENGTH_SHORT).show();
+            }
+        });
 //        circleCheckView.startDotAnimator();
         circleCheckView.registerLoadListener(new CircleCheckView.LoadListener() {
             @Override
@@ -41,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         Timer timer = new Timer();
-        timer.schedule(task,1000*1);
+        timer.schedule(task,0);
 
 
     }

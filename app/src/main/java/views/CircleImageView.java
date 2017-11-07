@@ -37,14 +37,15 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.RequiresApi;
-import android.util.AttributeSet;
-import android.view.View;
-import android.view.ViewOutlineProvider;
+import android.util.*;
+import android.view.*;
 import android.widget.ImageView;
 
 import kyvo.circlecheckview.*;
 
 public class CircleImageView extends ImageView {
+
+    private final String TAG = "CircleImageView";
 
     private static final ScaleType SCALE_TYPE = ScaleType.CENTER_CROP;
 
@@ -478,5 +479,6 @@ public class CircleImageView extends ImageView {
         }
 
     }
+
 
 }

@@ -16,5 +16,24 @@
         <attr name="civ_fill_color" format="color" />
         <attr name="civ_circle_background_color" format="color" />
     </declare-styleable>
+    
+    <declare-styleable name="CircleProgressView">
+        <attr name="bottom_circle_scale_color" format="color"/><!--底部刻度的颜色-->
+        <attr name="bottom_circle_scale_width" format="dimension"/><!--底部刻度的宽度-->
+        <attr name="scale_height" format="dimension"/><!--刻度的高度-->
+
+        <attr name="top_scale_width" format="dimension"/><!--上部刻度的宽度-->
+
+        <attr name="round_ball_radius" format="dimension"/><!--圆点的半径-->
+
+        <attr name="top_circle_scale_color" format="color"/><!--加载的刻度颜色-->
+        <attr name="top_arc_scale_color" format="color"/><!--弧形刻度的颜色-->
+        <attr name="round_ball_color" format="color"/><!--圆球的颜色-->
+        <attr name="inside_circle_color" format="color"/><!--内园的颜色-->
+        <attr name="text_color" format="color"/><!--字体的的颜色-->
+
+
+
+    </declare-styleable>
 
 </resources>
