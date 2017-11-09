@@ -2,6 +2,7 @@ package kyvo.circlecheckview;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.*;
 import android.view.*;
 import android.widget.*;
 
@@ -11,11 +12,19 @@ import views.*;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final String TAG = "test";
+
+
+    private SeekBar seekBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
+
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+
 
         final CircleCheckView circleCheckView = (CircleCheckView) findViewById(R.id.circleCheckView);
         circleCheckView.setOnViewClikListener(new CircleCheckView.OnViewClickListener() {
@@ -24,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "优化", Toast.LENGTH_SHORT).show();
             }
         });
-//        circleCheckView.startDotAnimator();
         circleCheckView.registerLoadListener(new CircleCheckView.LoadListener() {
             @Override
             public void loadEnd() {
@@ -51,6 +59,39 @@ public class MainActivity extends AppCompatActivity {
         Timer timer = new Timer();
         timer.schedule(task,0);
 
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                circleCheckView.setProgress(progress);
+            }
 
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        Log.i(TAG, "MainActivity : dispatchKeyEvent: " + event.getAction() );
+        boolean result = super.dispatchTouchEvent(event);
+        return result;
+    }
+
+
+
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        Log.i(TAG, "MainActivity : onTouchEvent: " + event.getAction() );
+        boolean result = super.onTouchEvent(event);
+        return result;
     }
 }

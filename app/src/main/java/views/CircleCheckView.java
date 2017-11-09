@@ -23,11 +23,12 @@ import static java.lang.Math.max;
 public class CircleCheckView extends View{
 
     ValueAnimator animator;
-    private final String TAG = "CircleCheckView";
+    private final String TAG = "test";
     private Context context;
     private Paint circlePaint;//外圈画笔
     private Paint pointPaint;//圆点画笔
     private Paint insideCirclePaint;//内圈画笔
+    private Paint insideStokePaint;//内圈描边画笔
     private Paint textPaint;//文字画笔
 
 
@@ -36,6 +37,11 @@ public class CircleCheckView extends View{
 
     private int mWidth;
     private int mHeight;
+
+    private int centerX;
+    private int centerY;
+
+    private float insideCircleRadius;
 
     private float mDotProgress;
     private float circleProgress;
@@ -52,7 +58,13 @@ public class CircleCheckView extends View{
     private int scaleHeight;
     private int topCircleScaleWidth;
     private int roundBallRadius;
+
+    private boolean onClicking;
     //圆点半径
+
+    private float radius;
+    private float pointX;
+    private float pointY;
 
     public CircleCheckView(Context context) {
         this(context,null);
@@ -109,8 +121,14 @@ public class CircleCheckView extends View{
         insideCirclePaint = new Paint();
         insideCirclePaint.setAntiAlias(true);
         insideCirclePaint.setColor(context.getResources().getColor(R.color.grey));
-        insideCirclePaint.setStyle(Paint.Style.STROKE);
-        insideCirclePaint.setStrokeWidth(1);
+        insideCirclePaint.setStrokeWidth(Utils.dip2px(context,1));
+        insideCirclePaint.setStyle(Paint.Style.FILL);
+
+        insideStokePaint = new Paint();
+        insideStokePaint.setAntiAlias(true);
+        insideStokePaint.setColor(context.getResources().getColor(R.color.grey));
+        insideStokePaint.setStyle(Paint.Style.STROKE);
+        insideStokePaint.setStrokeWidth(Utils.dip2px(context,1));
 
         textPaint = new Paint();
         textPaint.setAntiAlias(true);
@@ -119,6 +137,8 @@ public class CircleCheckView extends View{
         textPaint.setTextSize(60);
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setColor(Color.WHITE);
+
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -136,7 +156,16 @@ public class CircleCheckView extends View{
 
         mWidth = resolveSize(minWidth,widthMeasureSpec);
         mHeight = resolveSize(minHeight,heightMeasureSpec);
-        Log.e(TAG, "onMeasure: mWidth:" + mWidth + "   mHeight:" + mHeight);
+        centerX = mWidth/2;
+        centerY = mHeight/2;
+
+         radius  = mWidth/2;
+        float a = (float) Math.cos(Math.PI * 30/180) * radius;
+        float b = (float) (Math.sin(Math.PI * 30/180) * radius);
+        pointX = radius - b;
+        pointY = radius + a;
+
+//        Log.e(TAG, "onMeasure: mWidth:" + mWidth + "   mHeight:" + mHeight);
         setMeasuredDimension(mWidth,mHeight);
     }
 
@@ -144,25 +173,43 @@ public class CircleCheckView extends View{
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+
+
         int startY = (mHeight - mWidth)/2;
-        Log.e(TAG, "onDraw: startY:" + startY);
-        canvas.drawCircle(mWidth/2,mHeight/2,mWidth/2.0f/10*7, insideCirclePaint);
-        insideCirclePaint.setColor(context.getResources().getColor(R.color.translucent));
-        insideCirclePaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        canvas.drawCircle(mWidth/2,mHeight/2,mWidth/2.0f/10*7, insideCirclePaint);
+//        Log.e(TAG, "onDraw: startRawY:" + startRawY);
+        insideCircleRadius = mWidth/2.0f/10*7;
+        int centerColor = context.getResources().getColor(R.color.grey_60);
+        int edageColor = context.getResources().getColor(R.color.grey_0f);
+        if(!onClicking){
+            RadialGradient radialGradient = new RadialGradient(mWidth/2,mHeight/2,insideCircleRadius,centerColor,edageColor, Shader.TileMode.REPEAT);
+            insideCirclePaint.setShader(radialGradient);
+        }else {
+            RadialGradient radialGradient = new RadialGradient(mWidth/2,mHeight/2,insideCircleRadius,edageColor,edageColor, Shader.TileMode.REPEAT);
+            insideCirclePaint.setShader(radialGradient);
+        }
+
+        canvas.save();
+        canvas.drawCircle(mWidth/2,mHeight/2,insideCircleRadius, insideStokePaint);
+        canvas.restore();
+
+        canvas.save();
+        canvas.drawCircle(mWidth/2,mHeight/2,insideCircleRadius, insideCirclePaint);
+        canvas.restore();
 
 
         textPaint.setTextSize(60);
         Rect bounds = new Rect();
-        textPaint.getTextBounds(circleProgress + "分",0,1,bounds);
+        textPaint.getTextBounds((int)circleProgress + "分",0,1,bounds);
         Paint.FontMetrics fontMetrics = insideCirclePaint.getFontMetrics();
-        canvas.drawText(circleProgress + "分",mWidth/2,mHeight/2 + (fontMetrics.bottom - fontMetrics.top)/2 - fontMetrics.bottom, textPaint);
-
+        canvas.save();
+        canvas.drawText((int) circleProgress + "分",mWidth/2,mHeight/2 + (fontMetrics.bottom - fontMetrics.top)/2 - fontMetrics.bottom, textPaint);
+        canvas.restore();
         textPaint.setTextSize(25);
 
 
 
         if(!loadend){
+            canvas.save();
             textPaint.getTextBounds("正在加载...",0,7,bounds);
             Paint.FontMetrics fontMetrics2 = insideCirclePaint.getFontMetrics();
             float textY = Utils.dip2px(context,20) + fontMetrics.bottom - fontMetrics.top +mHeight/2 + (fontMetrics2.bottom - fontMetrics2.top)/2 - fontMetrics2.bottom;
@@ -179,6 +226,7 @@ public class CircleCheckView extends View{
                 canvas.drawLine(mWidth/2.0f, startY > 0 ? mHeight - startY : mHeight ,mWidth/2.0f,startY > 0 ? mHeight -startY - scaleHeight : mHeight - scaleHeight,circlePaint);
                 canvas.rotate(3.6f,mWidth/2,mHeight/2);
             }
+            canvas.restore();
 
             if(circleProgress == 100){
                 circleProgress = 0;
@@ -190,11 +238,14 @@ public class CircleCheckView extends View{
                 invalidate();
                 listener.loadEnd();
             }else {
+                canvas.save();
                 canvas.rotate(mDotProgress*3.6f,mWidth/2,mHeight/2);
                 canvas.drawCircle(mWidth/2.0f,startY > 0 ? startY + scaleHeight +  Utils.dip2px(context,6): scaleHeight + roundBallRadius*2,roundBallRadius,pointPaint);
                 startDotAnimator();
+                canvas.restore();
             }
         }else {
+            canvas.save();
             textPaint.getTextBounds("点击优化",0,4,bounds);
             Paint.FontMetrics fontMetrics2 = insideCirclePaint.getFontMetrics();
             float textY = Utils.dip2px(context,20) + fontMetrics.bottom - fontMetrics.top +mHeight/2 + (fontMetrics2.bottom - fontMetrics2.top)/2 - fontMetrics2.bottom;
@@ -212,6 +263,7 @@ public class CircleCheckView extends View{
                 canvas.drawLine(mWidth/2.0f, startY > 0 ? mHeight - startY : mHeight ,mWidth/2.0f,startY > 0 ? mHeight -startY - scaleHeight : mHeight - scaleHeight,circlePaint);
                 canvas.rotate(3.0f,mWidth/2,mHeight/2);
             }
+            canvas.restore();
 //            invalidate();
         }
 
@@ -234,7 +286,7 @@ public class CircleCheckView extends View{
             public void onAnimationUpdate(ValueAnimator animation) {
                 // 设置小圆点的进度，并通知界面重绘
                 mDotProgress = (Float) animation.getAnimatedValue();
-                Log.e(TAG, "onAnimationUpdate: mDotProgress:" + mDotProgress);
+//                Log.e(TAG, "onAnimationUpdate: mDotProgress:" + mDotProgress);
                 invalidate();
             }
         });
@@ -244,41 +296,47 @@ public class CircleCheckView extends View{
     public void setProgress(final int progress){
 
         circleProgress = progress;
+        if(circleProgress > 100){
+            circleProgress = 100;
+        }
+        if(circleProgress < 0){
+            circleProgress = 0;
+        }
         if(Thread.currentThread() == Looper.getMainLooper().getThread()){
 
-            if(loadend){
-                Timer timer = new Timer();
-                TimerTask task = new TimerTask() {
-                    @Override
-                    public void run() {
-                        for(circleProgress = 0; circleProgress < progress;circleProgress++){
-                            try {
-                                Thread.sleep(10);
-                                postInvalidate();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                };
-                timer.schedule(task,0);
-            }else {
+//            if(loadend){
+//                Timer timer = new Timer();
+//                TimerTask task = new TimerTask() {
+//                    @Override
+//                    public void run() {
+//                        for(circleProgress = 0; circleProgress < progress;circleProgress++){
+//                            try {
+//                                Thread.sleep(10);
+//                                postInvalidate();
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    }
+//                };
+//                timer.schedule(task,0);
+//            }else {
                 invalidate();
-            }
+//            }
 
         }else {
-            if(loadend){
-                for(circleProgress = 0; circleProgress < progress;circleProgress++){
-                    try {
-                        Thread.sleep(10);
-                        postInvalidate();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }else {
+//            if(loadend){
+//                for(circleProgress = 0; circleProgress < progress;circleProgress++){
+//                    try {
+//                        Thread.sleep(10);
+//                        postInvalidate();
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }else {
                 postInvalidate();
-            }
+//            }
 
         }
 
@@ -289,36 +347,87 @@ public class CircleCheckView extends View{
         return circleProgress;
     }
 
-
     @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
-        return super.dispatchKeyEvent(event);
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        Log.i(TAG, "CircleCheckView : dispatchTouchEvent: " + event.getAction() );
+        boolean result = super.dispatchTouchEvent(event);
+        return result;
     }
 
-    private float startX,startY;
+
+    private float startRawX, startRawY;
+    private float startX, startY;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        Log.i(TAG, "CircleCheckView :onTouchEvent: " + event.getAction());
+        boolean result = super.onTouchEvent(event);
+
         if(!loadend){
-            return super.onTouchEvent(event);
+            return false;
         }
-//        float x = (int) event.getX();//相对于控件的坐标
-//        float y = event.getY();
+
+        float x = (int) event.getX();//相对于控件的坐标
+        float y = event.getY();
         float rawX = event.getRawX();//相对于屏幕的坐标
         float rawY = event.getRawY();
+        startRawX = rawX;
+        startRawY = rawY;
+        startX = x;
+        startY = y;
+
+        int distance = (int) Math.sqrt(Math.abs((startX - centerX)*(startX - centerX))+Math.abs((startY - centerY)*(startY - centerY)));
+        Log.i(TAG, "ACTION_UP: startX:" + startX + "startY:" + startY + " centerX:" + centerX + " centerY:" + centerY + " pointX:" + pointX + " pointY:" + pointY);
+//        θ=arctan[(y2-y0)/(x2-x0)]-arctan[(y1-y0)/(x1-x0)]；
+
+//        Log.i(TAG, "onTouchEvent: jiaodu:" + jiaodu);
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
-                startX = rawX;
-                startY = rawY;
+                if(distance <= insideCircleRadius){
+                    onClicking = true;
+                }
+
+                invalidate();
                 break;
             case MotionEvent.ACTION_UP:
-                if(loadend){
-                    onClickListener.onClick(this);
+                onClicking = false;
+                invalidate();
+                Log.i(TAG, "ACTION_UP: startX:" + startX + "startY:" + startY + " centerX:" + centerX + " centerY:" + centerY + " distance:" + distance + " insideCircleRadius:" + insideCircleRadius);
+                if(distance <= insideCircleRadius){
+                    if(onClickListener != null){
+                        onClickListener.onClick(this);
+                    }
                 }
-//                onClickListener.onClick(this);
                 break;
             case MotionEvent.ACTION_MOVE:
-                Log.e(TAG, "onTouchEvent: ACTION_MOVE");
+//                Log.e(TAG, "onTouchEvent: ACTION_MOVE");
+                if(distance > insideCircleRadius){
+                    double originAngle = Math.atan((pointY-centerY)/(pointX-centerX)) * 180/Math.PI;
+                    if(pointX - centerX < 0){
+                        originAngle += 180;
+                    }else if(pointX -centerX > 0 && pointY - centerY < 0){
+                        originAngle += 360;
+                    }
+
+
+                    double gestureAngle = Math.atan((y-centerY)/(x-centerX)) * 180/Math.PI;
+                    if(x - centerX < 0){
+                        gestureAngle += 180;
+                    }else if(x -centerX > 0 && y - centerY < 0){
+                        gestureAngle += 360;
+                    }
+
+                    if(gestureAngle < originAngle){
+                        gestureAngle += 360;
+                    }
+
+                    double angle = gestureAngle - originAngle;
+                    setProgress((int) angle/3);
+//                  弧度制×（180°/π）
+//                  Log.i("wadexi", "onTouchEvent: jiaodu:" + jiaodu);
+                    Log.i("wadexi", "onTouchEvent: originAngle:" + originAngle + "  gestureAngle:" + gestureAngle + "angle:" + angle);
+                }
+
                 break;
             case MotionEvent.ACTION_OUTSIDE:
                 Log.e(TAG, "onTouchEvent: ACTION_OUTSIDE");
@@ -334,11 +443,10 @@ public class CircleCheckView extends View{
                 break;
             case MotionEvent.ACTION_HOVER_EXIT:
                 Log.e(TAG, "onTouchEvent: ACTION_HOVER_EXIT");
-
                 break;
         }
-
-        return super.onTouchEvent(event);
+        result = true;
+        return true;
     }
 
     public interface OnViewClickListener{

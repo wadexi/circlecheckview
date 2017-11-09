@@ -3,9 +3,12 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="grey">#a8abac</color>
+    <color name="grey">#ffa8abac</color>
+    <color name="grey_60">#60a8abac</color>
+    <color name="grey_0f">#0fa8abac</color>
+    <!--<color name="grey">#a8abac</color>-->
     <color name="blue_bg">#1A4789</color>
     <color name="yellow_circle">#FF9704</color>
-    <color name="translucent">#0Dffffff</color>
+    <color name="translucent">#80ffffff</color>
     <!--<color name="translucent">#5274A8</color>-->
 </resources>
